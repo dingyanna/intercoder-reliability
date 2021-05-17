@@ -1,6 +1,5 @@
 import React from 'react';
 import { createMuiTheme } from '@material-ui/core/styles';
-
 import {
   Grid,
   Button,
@@ -11,7 +10,7 @@ import {
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import './Calculation.module.css';
+import './Calculation.global.css';
 import { PythonShell } from 'python-shell';
 import { Alert, AlertTitle } from '@material-ui/lab';
 import IconButton from '@material-ui/core/IconButton';
@@ -24,6 +23,7 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+
 const theme1 = createMuiTheme({
   palette: {
     primary: {
@@ -288,7 +288,6 @@ export default function Calculation(): JSX.Element {
   }
 
 
-
   return (
     <ThemeProvider theme={theme1}>
       <Backdrop open={backDrop}>
@@ -417,7 +416,7 @@ export default function Calculation(): JSX.Element {
                 <label
                   htmlFor="data" style={{ padding: 7, }}>
                   Upload Data
-            </label>
+                </label>
                 <Typography
                   variant="subtitle1"
                   style={{
