@@ -14,5 +14,12 @@
     "postinstall": "yarn electron-rebuild"
   },
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "d3": "^6.7.0",
+    "react-csv-to-table": "0.0.4"
+  },
+  "devDependencies": {
+    "@types/d3": "^6.3.0",
+    "pandas-js": "^0.2.4"
+  }
 }

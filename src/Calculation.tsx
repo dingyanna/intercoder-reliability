@@ -11,7 +11,6 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import './Calculation.global.css';
-import { PythonShell } from 'python-shell';
 import { Alert, AlertTitle } from '@material-ui/lab';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
@@ -69,7 +68,6 @@ export default function Calculation(): JSX.Element {
 
   const [inputExistence, setInputExistence] = React.useState("")
 
-
   const [state, setState] = React.useState({
     cohen: false,
     weighted: false,
@@ -111,19 +109,6 @@ export default function Calculation(): JSX.Element {
       setLinearProgress(true)
     }
     setDataPath(e.target.files[0].path);
-    const path = require('path');
-    const options = {
-      scriptPath: path.join(__dirname, '/../engine'),
-      args: [e.target.files[0].path]
-    }
-    const detect_data = new PythonShell('detect_data.py', options);
-    detect_data.on('message', function (message) {
-      console.log(message)
-      const splitted = message.split(" ");
-      setNumCoders(splitted[0]);
-      setNumSubjects(splitted[1]);
-      setLinearProgress(false)
-    })
 
   };
 
@@ -135,23 +120,7 @@ export default function Calculation(): JSX.Element {
     }
     setCategories(e.target.files[0].name);
     setCatPath(e.target.files[0].path)
-    const path = require('path');
-    const options = {
-      scriptPath: path.join(__dirname, '/../engine'),
-      args: [e.target.files[0].path]
-    }
-    const detect_cat = new PythonShell('detect_category.py', options);
-
-    detect_cat.on('message', function (message) {
-      console.log(message);
-      const mylist = message.split(',');
-      let mylist1 = []
-      for (let i = 0; i < mylist.length; i++) {
-        mylist1.push(createCategory(mylist[i]))
-      }
-      setCategoryList(mylist1);
-      setLinearProgress(false)
-    })
+    
   };
 
   const onWeightsUploaded = (e: any): void => {
@@ -161,24 +130,7 @@ export default function Calculation(): JSX.Element {
     }
     setWeights(e.target.files[0].name);
     setWeightsPath(e.target.files[0].path)
-    const path = require('path');
-    const options = {
-      scriptPath: path.join(__dirname, '/../engine'),
-      args: [e.target.files[0].path]
-    }
-    const detect_weight = new PythonShell('detect_weight.py', options);
-
-    detect_weight.on('message', function (message) {
-      console.log(message);
-      let tokenize = message.split(',')
-      let tokenize1 = []
-      for (let i = 0; i < tokenize.length; i++) {
-        let catWeight = tokenize[i].split(':')
-        tokenize1.push(createCatWeight(catWeight[0], catWeight[1]))
-      }
-      setWeightsList(tokenize1)
-      setLinearProgress(false);
-    })
+    
 
   };
 
@@ -267,24 +219,6 @@ export default function Calculation(): JSX.Element {
       }
     }
 
-    const path = require('path');
-    const options = {
-      scriptPath: path.join(__dirname, '/../engine'),
-      args: [measureBitMap, dataPath, catPath, weightsPath]
-    }
-
-    let python_program = new PythonShell('cal_multiple.py', options);
-    python_program.on('message', function (message) {
-      console.log(message)
-      // check error
-
-      let msg = message.split(", ").join("\n");
-      console.log(msg)
-      setResult(msg);
-      setOpenResult(true);
-      setBackDrop(false);
-      setOpenError(false);
-    })
   }
 
 
@@ -293,7 +227,7 @@ export default function Calculation(): JSX.Element {
       <Backdrop open={backDrop}>
         <CircularProgress />
       </Backdrop>
-      <Grid container style={{ overflow: 'auto', height: 800, }}
+      <Grid container style={{ height: 800, }}
       >
         <Grid
           item
