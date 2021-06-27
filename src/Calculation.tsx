@@ -22,6 +22,7 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+const Papa = require('papaparse');
 
 const theme1 = createMuiTheme({
   palette: {
@@ -41,11 +42,11 @@ function createCatWeight(category: any, weight: any) {
   return {category, weight}
 }
 export default function Calculation(): JSX.Element {
-  const [data, setData] = React.useState('no file chosen');
-  const [dataPath, setDataPath] = React.useState('');
+  const [dataName, setDataName] = React.useState('no file chosen');
+  const [data, setData] = React.useState([]);
 
-  const [categories, setCategories] = React.useState('no file chosen');
-  const [catPath, setCatPath] = React.useState('');
+  const [catPath, setCatPath] = React.useState('no file chosen');
+  const [categories, setCategories] = React.useState([]);
 
   const [weights, setWeights] = React.useState('no file chosen');
   const [weightsPath, setWeightsPath] = React.useState('');
@@ -104,11 +105,19 @@ export default function Calculation(): JSX.Element {
   const onDataUploaded = (e: any): void => {
 
     setLinearProgress(false)
-    setData(e.target.files[0].name);
+    setDataName(e.target.files[0].name);
     if (e.target.files !== undefined) {
       setLinearProgress(true)
     }
-    setDataPath(e.target.files[0].path);
+
+    Papa.parse(e.target.files[0], {
+      complete: (result: any) => {
+        setData(result.data);
+        console.log(result);
+      },
+      header: false
+    })
+    setLinearProgress(false);
 
   };
 
@@ -118,8 +127,15 @@ export default function Calculation(): JSX.Element {
     if (e.target.files !== undefined) {
       setLinearProgress(true)
     }
-    setCategories(e.target.files[0].name);
-    setCatPath(e.target.files[0].path)
+    setCatPath(e.target.files[0].name);
+    Papa.parse(e.target.files[0], {
+      complete: (result: any) => {
+        setCategories(result.data);
+        console.log(result);
+      },
+      header: false
+    })
+    setLinearProgress(false);
     
   };
 
@@ -129,15 +145,22 @@ export default function Calculation(): JSX.Element {
       setLinearProgress(true)
     }
     setWeights(e.target.files[0].name);
-    setWeightsPath(e.target.files[0].path)
     
+    Papa.parse(e.target.files[0], {
+      complete: (result: any) => {
+        setWeightsPath(result.data);
+        console.log(result);
+      },
+      header: false
+    })
+    setLinearProgress(false);
 
   };
 
 
   const onReset = (): void => {
-    setData('no file chosen');
-    setCategories('no file chosen');
+    setDataName('no file chosen');
+    setCatPath('no file chosen');
     setWeights('no file chosen');
     setNumCoders('None');
     setNumSubjects('None');
@@ -181,10 +204,10 @@ export default function Calculation(): JSX.Element {
       inputError.push("measure")
     }
 
-    if (data === 'no file chosen') {
+    if (dataName === 'no file chosen') {
       inputError.push("data");
     }
-    if (categories === 'no file chosen') {
+    if (catPath === 'no file chosen') {
       inputError.push("categories");
     }
 
@@ -201,12 +224,51 @@ export default function Calculation(): JSX.Element {
     }
   }
 
+  const cohenkappa = () => {
+    
+    var same = 0;
+    var coder1 : any = {};
+    var coder2 : any = {};
+    for (let k = 0; k < categories.length; k++) {
+      coder1[categories[k][0]] = 0;
+      coder2[categories[k][0]] = 0;
+    }
+    console.log(coder1);
+    console.log(coder2);
+
+    var total = data.length;
+    for (let j = 0; j < total; j++) {
+      if (data[j][0] == data[j][1]) {
+        same += 1;
+      }
+      console.log(data[j]);
+      coder1[data[j][0]] += 1;
+      coder2[data[j][1]] += 1;
+    }
+
+    let pa = same / total;
+    
+    let pe = 0;
+    for (let k = 0; k < categories.length; k++) {
+      pe += coder1[categories[k][0]] * coder2[categories[k][0]];
+    }
+    pe = pe / (total * total);
+    let kappa = (pa - pe) / (1 - pe);
+    console.log(kappa);
+    setResult(kappa.toString());
+    setOpenResult(true);
+    
+
+  }
+
   const calculate = () => {
     if (!checkInput()) {
       setOpenError(true);
       return;
     }
     setBackDrop(true);
+    cohenkappa();
+    
 
     let values = [cohen, weighted, multilabel, pNominal, pOrdinal,
       kNominal, kOrdinal, sNominal, sOrdinal, fNominal, fOrdinal];
@@ -218,6 +280,8 @@ export default function Calculation(): JSX.Element {
         measureBitMap = measureBitMap.concat("0")
       }
     }
+    setBackDrop(false);
+    
 
   }
 
@@ -360,7 +424,7 @@ export default function Calculation(): JSX.Element {
                     overflow: 'auto',
                   }}
                 >
-                  {data}
+                  {dataName}
                 </Typography>
               </Grid>
               <Grid item>
@@ -386,7 +450,7 @@ export default function Calculation(): JSX.Element {
                     overflow: 'auto',
                   }}
                 >
-                  {categories}
+                  {catPath}
                 </Typography>
               </Grid>
             </Grid>
