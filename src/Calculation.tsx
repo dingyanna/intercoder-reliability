@@ -35,8 +35,8 @@ const theme1 = createMuiTheme({
   },
 });
 
-function createCategory(category: any) {
-  return {category}
+function createCategory(rank: number, category: any) {
+  return {rank, category}
 }
 function createCatWeight(category: any, weight: any) {
   return {category, weight}
@@ -52,10 +52,10 @@ export default function Calculation(): JSX.Element {
   const [weightsPath, setWeightsPath] = React.useState('');
 
   const [result, setResult] = React.useState('');
-  const [numCoders, setNumCoders] = React.useState('None');
-  const [numSubjects, setNumSubjects] = React.useState('None');
+  const [numCoders, setNumCoders] = React.useState('0');
+  const [numSubjects, setNumSubjects] = React.useState('0');
 
-  const [categoryList, setCategoryList] = React.useState([createCategory('None')]);
+  const [categoryList, setCategoryList] = React.useState([createCategory(0, 'None')]);
   const [weightsList, setWeightsList] = React.useState([createCatWeight('None', 'None')]);
   const [linearProgress, setLinearProgress] = React.useState(false);
 
@@ -103,68 +103,79 @@ export default function Calculation(): JSX.Element {
     pNominal, pOrdinal, fNominal, fOrdinal, sNominal, sOrdinal, } = state;
 
   const onDataUploaded = (e: any): void => {
-
+    console.log('upload data');
     setLinearProgress(false)
     setDataName(e.target.files[0].name);
     if (e.target.files !== undefined) {
-      setLinearProgress(true)
+      setLinearProgress(true);
+      Papa.parse(e.target.files[0], {
+        complete: (result: any) => {
+          setData(result.data);
+          console.log(result);
+          setNumSubjects(result.data.length);
+          setNumCoders(result.data[0].length);
+        },
+        header: false
+      })
+      setLinearProgress(false);
     }
 
-    Papa.parse(e.target.files[0], {
-      complete: (result: any) => {
-        setData(result.data);
-        console.log(result);
-      },
-      header: false
-    })
-    setLinearProgress(false);
+    
 
   };
 
   const onCategoriesUploaded = (e: any): void => {
-
+    console.log("category uploading");
     setLinearProgress(false)
     if (e.target.files !== undefined) {
       setLinearProgress(true)
+      setCatPath(e.target.files[0].name);
+      Papa.parse(e.target.files[0], {
+        complete: (result: any) => {
+          setCategories(result.data.flat());
+          let tempList = []
+          for (let i = 0; i < result.data.length; i++) {
+            tempList.push(createCategory(i, result.data[i]));
+          }
+          setCategoryList(tempList);
+        },
+        header: false
+      })
+      setLinearProgress(false);
     }
-    setCatPath(e.target.files[0].name);
-    Papa.parse(e.target.files[0], {
-      complete: (result: any) => {
-        setCategories(result.data);
-        console.log(result);
-      },
-      header: false
-    })
-    setLinearProgress(false);
+    
+    
     
   };
 
-  const onWeightsUploaded = (e: any): void => {
-    setLinearProgress(false)
-    if (e.target.files !== undefined) {
-      setLinearProgress(true)
-    }
-    setWeights(e.target.files[0].name);
+  // const onWeightsUploaded = (e: any): void => {
+  //   setLinearProgress(false)
+  //   if (e.target.files !== undefined) {
+  //     setLinearProgress(true)
+  //   }
+  //   setWeights(e.target.files[0].name);
     
-    Papa.parse(e.target.files[0], {
-      complete: (result: any) => {
-        setWeightsPath(result.data);
-        console.log(result);
-      },
-      header: false
-    })
-    setLinearProgress(false);
+  //   Papa.parse(e.target.files[0], {
+  //     complete: (result: any) => {
+  //       setWeightsPath(result.data);
+  //       console.log(result);
+  //     },
+  //     header: false
+  //   })
+  //   setLinearProgress(false);
 
-  };
+  // };
 
 
   const onReset = (): void => {
     setDataName('no file chosen');
+    setData([]);
+    setCategories([]);
     setCatPath('no file chosen');
     setWeights('no file chosen');
-    setNumCoders('None');
-    setNumSubjects('None');
-    setCategoryList([createCategory('None')]);
+    setNumCoders('0');
+    setNumSubjects('0');
+    setCategoryList([createCategory(0, 'None')]);
     setWeightsList([createCatWeight('None', 'None')]);
     setLinearProgress(false);
     setResult('');
@@ -211,9 +222,9 @@ export default function Calculation(): JSX.Element {
       inputError.push("categories");
     }
 
-    if (checkWeighted() && weights === 'no file chosen') {
-      inputError.push(" weights");
-    }
+    // if (checkWeighted() && weights === 'no file chosen') {
+    //   inputError.push(" weights");
+    // }
     let msg = inputError.join(', ');
     let result1 = "Missing input(s): ".concat(msg)
     setInputExistence(result1);
@@ -224,42 +235,6 @@ export default function Calculation(): JSX.Element {
     }
   }
 
-  const cohenkappa = () => {
-    
-    var same = 0;
-    var coder1 : any = {};
-    var coder2 : any = {};
-    for (let k = 0; k < categories.length; k++) {
-      coder1[categories[k][0]] = 0;
-      coder2[categories[k][0]] = 0;
-    }
-    console.log(coder1);
-    console.log(coder2);
-
-    var total = data.length;
-    for (let j = 0; j < total; j++) {
-      if (data[j][0] == data[j][1]) {
-        same += 1;
-      }
-      console.log(data[j]);
-      coder1[data[j][0]] += 1;
-      coder2[data[j][1]] += 1;
-    }
-
-    let pa = same / total;
-    
-    let pe = 0;
-    for (let k = 0; k < categories.length; k++) {
-      pe += coder1[categories[k][0]] * coder2[categories[k][0]];
-    }
-    pe = pe / (total * total);
-    let kappa = (pa - pe) / (1 - pe);
-    console.log(kappa);
-    setResult(kappa.toString());
-    setOpenResult(true);
-    
-
-  }
 
   const calculate = () => {
     if (!checkInput()) {
@@ -267,22 +242,118 @@ export default function Calculation(): JSX.Element {
       return;
     }
     setBackDrop(true);
-    cohenkappa();
-    
+    //let observedMatrix: number[][] = [];
+    const max = categories.length - 1;
+    var same = 0;
+    var coder1 : any = {};
+    var coder2 : any = {};
+    for (let k = 0; k <= max; k++) {
+      coder1[categories[k]] = 0;
+      coder2[categories[k]] = 0;
+    }
+    console.log(coder1);
+    console.log(coder2);
 
-    let values = [cohen, weighted, multilabel, pNominal, pOrdinal,
-      kNominal, kOrdinal, sNominal, sOrdinal, fNominal, fOrdinal];
-    let measureBitMap = ""
-    for (let i = 0; i < values.length; i++) {
-      if (values[i]) {
-        measureBitMap = measureBitMap.concat("1")
-      } else {
-        measureBitMap = measureBitMap.concat("0")
+    const N = data.length;
+
+    var weighted_sum = 0;
+    
+    for (let j = 0; j < N; j++) {
+      if (data[j][0] == data[j][1]) {
+        same += 1;
+      }
+      
+      let rank1 = categories.indexOf(data[j][0]);
+      let rank2 = categories.indexOf(data[j][1]);
+      if (rank1 != -1 && rank2 != -1) {
+        let weight = 1 - Math.abs(rank1- rank2) / max;
+        weighted_sum += weight;
+      }
+      coder1[data[j][0]] += 1;
+      coder2[data[j][1]] += 1;
+    }
+    console.log(coder1);
+    console.log(coder2);
+    var pa;
+    var result = "";
+    var pe_cohen = 0;
+    var pe_weighted = 0;
+    var pe_scott = 0;
+    var pe_scott_w = 0;
+    var pe = 0;
+    var kappa;
+
+    for (let k = 0; k <= max; k++) {
+      for (let j = 0; j <= max; j++) {
+        let weight = 1 - (Math.abs(k - j)) / max;
+        pe_weighted += weight * coder1[categories[k]] * coder2[categories[j]];
+        pe_scott_w += weight * (coder1[categories[k]] + coder2[categories[k]]) * (coder1[categories[j]] + coder2[categories[j]]);
+        if (k == j) {
+          pe_cohen += coder1[categories[k]] * coder2[categories[j]];
+          pe_scott += Math.pow(coder1[categories[k]] + coder2[categories[j]], 2);
+        }
       }
     }
-    setBackDrop(false);
-    
 
+
+    if (cohen) {
+      pa = same / N;
+      pe = pe_cohen / (N * N);
+      kappa = ((pa - pe) / (1 - pe)).toFixed(2);
+      result = result.concat("Cohen's Kappa: ")
+      result = result.concat(kappa.toString());
+      result = result.concat("\n");
+    }
+    if (weighted) {
+      pa = weighted_sum / N;
+      pe = pe_weighted / (N * N);
+      kappa = ((pa - pe) / (1 - pe)).toFixed(2);
+      result = result.concat("Weighted Kappa: ")
+      result = result.concat(kappa.toString());
+      result = result.concat("\n");
+    }
+    if (multilabel) {
+
+    }
+    if (pNominal) {
+      pa = (same / N).toFixed(2);
+      result = result.concat("Percentage Agreement: ")
+      result = result.concat(pa.toString());
+      result = result.concat("\n");
+    }
+    if (kNominal) {
+
+    }
+    if (kOrdinal) {
+
+    }
+    if (sNominal) {
+      pa = same / N;
+      pe = pe_scott / (4 * N * N);
+      kappa = ((pa - pe) / (1 - pe)).toFixed(2);
+      result = result.concat("Scott's Pi: ")
+      result = result.concat(kappa.toString());
+      result = result.concat("\n");
+    }
+    if (sOrdinal) {
+      pa = weighted_sum / N;
+      pe = pe_scott_w / (4 * N * N);
+      kappa = ((pa - pe) / (1 - pe)).toFixed(2);
+      result = result.concat("Weighted Scott's Pi: ")
+      result = result.concat(kappa.toString());
+      result = result.concat("\n");
+
+    }
+    if (fNominal) {
+
+    }
+    if (fOrdinal) {
+
+    }
+    setResult(result);
+    setOpenResult(true);
+    setBackDrop(false);
+  
   }
 
 
@@ -333,18 +404,7 @@ export default function Calculation(): JSX.Element {
                     <Checkbox checked={weighted} onChange={handleChange} name="weighted" />
                   </TableCell>
                 </TableRow>
-
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Percentage Agreement
-                  </TableCell>
-                  <TableCell component='th' scope='row'>
-                  <Checkbox checked={pNominal} onChange={handleChange} name="pNominal" />
-                  </TableCell>
-                  <TableCell component='th' scope='row'>
-                  <Checkbox checked={pOrdinal} onChange={handleChange} name="pOrdinal" />
-                  </TableCell>
-                </TableRow>  
+ 
 
                 <TableRow>
                   <TableCell component="th" scope="row">
@@ -385,6 +445,16 @@ export default function Calculation(): JSX.Element {
 
                 <TableRow>
                   <TableCell component="th" scope="row">
+                    Percentage Agreement
+                  </TableCell>
+                  <TableCell component='th' scope='row'>
+                  <Checkbox checked={pNominal} onChange={handleChange} name="pNominal" />
+                  </TableCell>
+                  <TableCell component='th' scope='row'></TableCell>
+                </TableRow> 
+
+                <TableRow>
+                  <TableCell component="th" scope="row">
                   Multi-label Kappa
                   </TableCell>
                   <TableCell component='th' scope='row'>
@@ -398,12 +468,11 @@ export default function Calculation(): JSX.Element {
             </Grid>
 
 
-          <div style={{ height: 30 }}> </div>
+          <div style={{ height: 40 }}> </div>
 
-
-          <Grid container item spacing={5}>
-            <Grid container item xs={12} sm={6} spacing={2}>
-              <Grid item>
+          
+            <Grid container item spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <input
                   type="file"
                   name="data"
@@ -427,7 +496,7 @@ export default function Calculation(): JSX.Element {
                   {dataName}
                 </Typography>
               </Grid>
-              <Grid item>
+              <Grid item xs={12} sm={6}>
                 <input
                   type="file"
                   name="categories"
@@ -454,7 +523,7 @@ export default function Calculation(): JSX.Element {
                 </Typography>
               </Grid>
             </Grid>
-            {checkWeighted() && (
+            {/* {checkWeighted() && (
               <Grid item xs={12} sm={6}>
                 <input
                   type="file"
@@ -483,9 +552,9 @@ export default function Calculation(): JSX.Element {
                 </Grid>
               </Grid>
             )
-            }
+            } */}
 
-          </Grid>
+          <div style={{ height: 40 }}> </div>
 
           <Grid item container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -507,7 +576,7 @@ export default function Calculation(): JSX.Element {
               </Button>
             </Grid>
           </Grid>
-          <div style={{ height: 180 }}> </div>
+          <div style={{ height: 100 }}> </div>
         </Grid>
 
         <Divider orientation="vertical" flexItem />
@@ -538,6 +607,9 @@ export default function Calculation(): JSX.Element {
           {linearProgress && <LinearProgress></LinearProgress>}
           <Grid item style={{ maxHeight: 500, overflow: 'auto', marginTop: 15 }}>
             <Grid item style={{ marginBottom: 10 }}>
+              <Typography variant="caption">
+                * Results will be shown here
+              </Typography>
               <Collapse in={openResult}>
                 <Alert
                   action={
@@ -553,7 +625,7 @@ export default function Calculation(): JSX.Element {
                     </IconButton>
                   }
                 >
-                  <AlertTitle>Result</AlertTitle>
+                  <AlertTitle></AlertTitle>
                   <Typography
                     variant="subtitle1"
                     className="new_line"
@@ -590,16 +662,22 @@ export default function Calculation(): JSX.Element {
 
             <Grid item>
               <Typography variant="subtitle1">
-                1. Number of Subjects: {numSubjects}
+                1. Number of Data Points: {numSubjects}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Typography variant="subtitle1">
+                2. Number of Coders: {numCoders}
               </Typography>
             </Grid>
 
             <Grid item>
-              <Typography variant="subtitle1">2. Categories:</Typography>
+              <Typography variant="subtitle1">3. Categories:</Typography>
 
               <Table size="small" aria-label="a dense table" style={{maxWidth: 400}}>
               <TableHead>
                 <TableRow>
+                  <TableCell>Rank</TableCell>
                   <TableCell>Category</TableCell>
                 </TableRow>
               </TableHead>
@@ -607,14 +685,20 @@ export default function Calculation(): JSX.Element {
                   {categoryList.map((category) => (
                     <TableRow key={category.category}>
                       <TableCell component="th" scope="row">
+                        {category.rank}
+                      </TableCell>
+                      <TableCell component="th" scope="row">
                         {category.category}
                       </TableCell>
                     </TableRow>
                   ))}
               </TableBody>
             </Table>
+            <Typography variant="caption">
+                Note: In the case of ordinal data, we calculate the weight matrix according to the above ranking of categories.
+              </Typography>
             </Grid>
-            <Grid item>
+            {/* <Grid item>
               <Typography variant="subtitle1">3. Category to Weight:</Typography>
               <Table size="small" aria-label="a dense table" style={{maxWidth: 400}}>
               <TableHead>
@@ -637,7 +721,7 @@ export default function Calculation(): JSX.Element {
               </TableBody>
             </Table>
 
-            </Grid>
+            </Grid> */}
           </Grid>
           <div style={{ height: 180 }}> </div>
         </Grid>
