@@ -10,6 +10,7 @@ import {
   createMuiTheme,
 } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
+import DescriptionIcon from '@material-ui/icons/Description';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -29,6 +30,7 @@ import MenuBookIcon from '@material-ui/icons/MenuBook';
 import HomeIcon from '@material-ui/icons/Home';
 import Calculation from './Calculation';
 import Documentation from './Documentation';
+import FileFormat from './FileFormat';
 
 const Home = () => {
 
@@ -107,7 +109,7 @@ const Home = () => {
   const classes = useStyles();
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
-  const [isHomePage, setHome] = React.useState(true);
+  const [page, setPage] = React.useState(0);
 
   const handleDrawerOpen = () => {
       setOpen(true);
@@ -118,8 +120,11 @@ const Home = () => {
   };
 
   const handlePage = () => {
-    if (isHomePage) {
+    if (page == 0) {
       return <Calculation />;
+    }
+    if (page == 1) {
+      return <FileFormat />;
     }
     return <Documentation />;
   };
@@ -172,7 +177,7 @@ const Home = () => {
           </div>
           <Divider />
           <List>
-            <ListItem button key="Home" onClick={() => setHome(true)}>
+            <ListItem button key="Home" onClick={() => setPage(0)}>
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
@@ -181,7 +186,16 @@ const Home = () => {
           </List>
           <Divider />
           <List>
-            <ListItem button key="Documentation" onClick={() => setHome(false)}>
+            <ListItem button key="File Format" onClick={() => setPage(1)}>
+              <ListItemIcon>
+                < DescriptionIcon />
+              </ListItemIcon>
+              <ListItemText primary="File Format" />
+            </ListItem>
+          </List>
+          <Divider />
+          <List>
+            <ListItem button key="Documentation" onClick={() => setPage(2)}>
               <ListItemIcon>
                 <MenuBookIcon />
               </ListItemIcon>
